@@ -15,6 +15,7 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 	t := NewTemplate(s.root)
 	config := ConfigHandler(s, tmpls)
 	get := FileGetHandler(s, tmpls, t)
+	list := ListHandler(s)
 	staticGet := FileStaticHandler(s, "/_raw/")
 	new_ := NewHandler(s, tmpls)
 	edit := EditHandler(s, tmpls, "/edit/")
@@ -47,6 +48,12 @@ func Handler(s *Store, tmpls *template.Template) http.HandlerFunc {
 			switch r.Method {
 			case http.MethodGet:
 				config(wr, r)
+			}
+
+		case r.URL.Path == "/_list":
+			switch r.Method {
+			case http.MethodGet:
+				list(wr, r)
 			}
 
 		case r.URL.Path == "/_new":
@@ -112,6 +119,22 @@ func ConfigHandler(s *Store, tmpls *template.Template) http.HandlerFunc {
 		if err := tmpls.ExecuteTemplate(w, "config.html", s.config); err != nil {
 			log.Printf("executing list template: %s", err)
 			writeError(w, http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func ListHandler(s *Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		list, err := s.List()
+		if err != nil {
+			log.Printf("executing list: %s", err)
+			writeError(w, http.StatusInternalServerError)
+			return
+		}
+		err = json.NewEncoder(w).Encode(map[string]interface{}{"files": list})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}

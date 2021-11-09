@@ -20,10 +20,20 @@ func NewTemplate(dir string) *Template {
 	t.fns = template.FuncMap{
 		"title": strings.Title,
 		"link":  t.Link,
+		"l":     t.Link,
+		"i":     t.Image,
+		"image": t.Image,
 		"sh":    t.Shell,
 	}
 	t.Template = template.New("engine").Funcs(t.fns).Delims("((", "))")
 	return &t
+}
+
+func (t *Template) Image(url string, args ...string) string {
+	if len(args) >= 1 {
+		return fmt.Sprintf(`<img src=%q alt=%q />`, url, args[0])
+	}
+	return fmt.Sprintf(`<img src=%q />`, url)
 }
 
 func (t *Template) Link(url string, args ...string) string {

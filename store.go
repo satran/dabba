@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -143,19 +142,7 @@ func (f *File) IsImage() bool {
 }
 
 func (f *File) Parse() template.HTML {
-	t, err := f.parser.Clone()
-	if err != nil {
-		return template.HTML(fmt.Sprintf("couldn't load parser %q: %w", f.Name, err))
-	}
-	t, err = t.Parse(f.Content())
-	if err != nil {
-		return template.HTML(fmt.Sprintf("couldn't parse template %q: %w", f.Name, err))
-	}
-	wr := &bytes.Buffer{}
-	if err := t.Execute(wr, nil); err != nil {
-		return template.HTML(fmt.Sprintf("couldn't execute template %q: %w", f.Name, err))
-	}
-	return template.HTML(wr.String())
+	return template.HTML(f.parser.Parse(f.Content()))
 }
 
 func (f *File) Content() string {
